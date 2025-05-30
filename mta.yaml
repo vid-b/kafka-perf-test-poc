@@ -1,0 +1,45 @@
+_schema-version: "3.1"
+ID: kcg-application
+version: "1.0.0"
+
+modules:
+  - name: kcg-app
+    type: java
+    path: kcg-app
+    build-parameters:
+      builder: maven
+      build-result: "target/*.[wj]ar"
+    parameters:
+#      Update the CONSUMER_GROUP_COUNT, INSTANCE_COUNT, memory and instances parameters
+#      Test load & CPU Perf - check grafana for readings
+      memory: 8G
+      disk-quota: 2G
+      instances: 4
+      buildpack: java_buildpack
+      health-check-timeout: 100
+      host: kcg-app-${space}
+#      enable-ssh: true
+    properties:
+      TARGET_RUNTIME: java_main
+      JAVA_OPTS: '-Dspring.profiles.active=ac
+                      -XX:MaxDirectMemorySize=600M
+                      -Dio.netty.noPreferDirect=true'
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
+      SAP_JWT_TRUST_ACL: '[{"clientid":"*","identityzone":"*"}]'
+      JBP_CONFIG_JMX: '{enabled: true}'
+      JBP_CONFIG_DEBUG: '{enabled: true}'
+      JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
+      SPRING_PROFILES_ACTIVE: cloud
+      ENVIRONMENT: CF
+      DT_CLUSTER_ID: kcg-app-${space}
+      DT_TAGS: "product=BNAC space=${space}"
+      CONSUMER_GROUP_COUNT: 10000
+      INSTANCE_COUNT: 4
+      ASSET_CENTRAL_INSTANCE: asset-central-instance
+    requires:
+      - name: ac-kafka
+
+resources:
+  - name: ac-kafka
+    type: org.cloudfoundry.existing-service
+
